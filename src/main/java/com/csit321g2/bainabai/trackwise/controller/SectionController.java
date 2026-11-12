@@ -48,6 +48,11 @@ public class SectionController {
         return service.getAllSections();
     }
 
+    @GetMapping("/getSection/{id}")
+    public SectionEntity getSection(@PathVariable int id) {
+        return service.getSection(id);
+    }
+
     @PutMapping("/putSection")
     public SectionEntity putSection(@RequestParam int id, @RequestBody SectionEntity newDetails) {
         return service.putSection(id, newDetails);

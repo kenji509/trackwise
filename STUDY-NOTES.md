@@ -38,9 +38,16 @@ The client sends the teacher as a nested object holding only the id. The service
 
 Same pattern elsewhere: `QuestionEntity` points to `QuizEntity` and `TopicEntity`, `ChoiceEntity` points to `QuestionEntity`, `UserEntity` points to `SectionEntity` (optional).
 
+## Get one by id
+
+Each controller has `GET /<entity>/api/getX/{id}`, for example `GET /section/api/getSection/5`.
+1. The controller takes the id with `@PathVariable int id` and calls `service.getSection(id)`.
+2. The service calls `repo.findById(id)` and, if nothing is found, throws `NoSuchElementException("Section 5 does not exist!")`.
+3. The controller's `NoSuchElementException` handler turns that into a 404 with a `NameErrorResponse`.
+
 ## Passwords
 
-`UserService` hashes the incoming password with `BCryptPasswordEncoder` before saving. In `UserEntity`, `passwordHash` is marked `@JsonIgnore` (with a `@JsonProperty` setter in write-only mode), so a client can send a password but responses never include it.
+`UserService` hashes the incoming password with `BCryptPasswordEncoder` before saving. In `UserEntity`, `passwordHash` is marked `@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)`, so a client can send a password but responses never include it.
 
 ## Error handling
 

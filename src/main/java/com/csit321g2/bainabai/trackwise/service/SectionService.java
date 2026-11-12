@@ -29,6 +29,10 @@ public class SectionService {
         return repo.findAll();
     }
 
+    public SectionEntity getSection(int id) {
+        return repo.findById(id).orElseThrow(() -> new NoSuchElementException("Section " + id + " does not exist!"));
+    }
+
     public SectionEntity putSection(int id, SectionEntity newDetails) {
         SectionEntity section = repo.findById(id).orElseThrow(() -> new NoSuchElementException("Section " + id + " does not exist!"));
         if (newDetails.getName() != null && !newDetails.getName().equalsIgnoreCase(section.getName())

@@ -48,6 +48,10 @@ public class QuestionService {
         return repo.findAll();
     }
 
+    public QuestionEntity getQuestion(int id) {
+        return repo.findById(id).orElseThrow(() -> new NoSuchElementException("Question " + id + " does not exist!"));
+    }
+
     public QuestionEntity putQuestion(int id, QuestionEntity newDetails) {
         QuestionEntity question = repo.findById(id).orElseThrow(() -> new NoSuchElementException("Question " + id + " does not exist!"));
         if (newDetails.getQuiz() == null) {

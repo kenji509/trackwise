@@ -37,6 +37,10 @@ public class ChoiceService {
         return repo.findAll();
     }
 
+    public ChoiceEntity getChoice(int id) {
+        return repo.findById(id).orElseThrow(() -> new NoSuchElementException("Choice " + id + " does not exist!"));
+    }
+
     public ChoiceEntity putChoice(int id, ChoiceEntity newDetails) {
         ChoiceEntity choice = repo.findById(id).orElseThrow(() -> new NoSuchElementException("Choice " + id + " does not exist!"));
         if (newDetails.getQuestion() == null) {

@@ -41,6 +41,10 @@ public class QuizService {
         return repo.findAll();
     }
 
+    public QuizEntity getQuiz(int id) {
+        return repo.findById(id).orElseThrow(() -> new NoSuchElementException("Quiz " + id + " does not exist!"));
+    }
+
     public QuizEntity putQuiz(int id, QuizEntity newDetails) {
         QuizEntity quiz = repo.findById(id).orElseThrow(() -> new NoSuchElementException("Quiz " + id + " does not exist!"));
         if (newDetails.getTeacher() == null) {

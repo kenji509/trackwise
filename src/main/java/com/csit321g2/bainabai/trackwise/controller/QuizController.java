@@ -48,6 +48,11 @@ public class QuizController {
         return service.getAllQuizzes();
     }
 
+    @GetMapping("/getQuiz/{id}")
+    public QuizEntity getQuiz(@PathVariable int id) {
+        return service.getQuiz(id);
+    }
+
     @PutMapping("/putQuiz")
     public QuizEntity putQuiz(@RequestParam int id, @RequestBody QuizEntity newDetails) {
         return service.putQuiz(id, newDetails);

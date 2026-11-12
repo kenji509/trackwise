@@ -46,6 +46,10 @@ public class UserService {
         return repo.findAll();
     }
 
+    public UserEntity getUser(int id) {
+        return repo.findById(id).orElseThrow(() -> new NoSuchElementException("User " + id + " does not exist!"));
+    }
+
     public UserEntity putUser(int id, UserEntity newDetails) {
         UserEntity user = repo.findById(id).orElseThrow(() -> new NoSuchElementException("User " + id + " does not exist!"));
         if (newDetails.getEmail() != null && !newDetails.getEmail().equalsIgnoreCase(user.getEmail())

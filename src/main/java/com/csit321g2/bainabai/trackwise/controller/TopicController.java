@@ -48,6 +48,11 @@ public class TopicController {
         return service.getAllTopics();
     }
 
+    @GetMapping("/getTopic/{id}")
+    public TopicEntity getTopic(@PathVariable int id) {
+        return service.getTopic(id);
+    }
+
     @PutMapping("/putTopic")
     public TopicEntity putTopic(@RequestParam int id, @RequestBody TopicEntity newDetails) {
         return service.putTopic(id, newDetails);

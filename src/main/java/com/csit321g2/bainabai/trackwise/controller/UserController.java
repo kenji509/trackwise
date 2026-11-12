@@ -48,6 +48,11 @@ public class UserController {
         return service.getAllUsers();
     }
 
+    @GetMapping("/getUser/{id}")
+    public UserEntity getUser(@PathVariable int id) {
+        return service.getUser(id);
+    }
+
     @PutMapping("/putUser")
     public UserEntity putUser(@RequestParam int id, @RequestBody UserEntity newDetails) {
         return service.putUser(id, newDetails);

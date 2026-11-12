@@ -29,6 +29,10 @@ public class TopicService {
         return repo.findAll();
     }
 
+    public TopicEntity getTopic(int id) {
+        return repo.findById(id).orElseThrow(() -> new NoSuchElementException("Topic " + id + " does not exist!"));
+    }
+
     public TopicEntity putTopic(int id, TopicEntity newDetails) {
         TopicEntity topic = repo.findById(id).orElseThrow(() -> new NoSuchElementException("Topic " + id + " does not exist!"));
         if (newDetails.getName() != null && !newDetails.getName().equalsIgnoreCase(topic.getName())

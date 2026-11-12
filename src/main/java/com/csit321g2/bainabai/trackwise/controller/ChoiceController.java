@@ -48,6 +48,11 @@ public class ChoiceController {
         return service.getAllChoices();
     }
 
+    @GetMapping("/getChoice/{id}")
+    public ChoiceEntity getChoice(@PathVariable int id) {
+        return service.getChoice(id);
+    }
+
     @PutMapping("/putChoice")
     public ChoiceEntity putChoice(@RequestParam int id, @RequestBody ChoiceEntity newDetails) {
         return service.putChoice(id, newDetails);

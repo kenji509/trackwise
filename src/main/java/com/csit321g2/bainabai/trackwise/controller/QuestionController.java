@@ -48,6 +48,11 @@ public class QuestionController {
         return service.getAllQuestions();
     }
 
+    @GetMapping("/getQuestion/{id}")
+    public QuestionEntity getQuestion(@PathVariable int id) {
+        return service.getQuestion(id);
+    }
+
     @PutMapping("/putQuestion")
     public QuestionEntity putQuestion(@RequestParam int id, @RequestBody QuestionEntity newDetails) {
         return service.putQuestion(id, newDetails);
