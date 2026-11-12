@@ -1,58 +1,50 @@
 package com.csit321g2.bainabai.trackwise.service;
 
-import com.csit321g2.bainabai.trackwise.dto.SectionRequest;
-import com.csit321g2.bainabai.trackwise.dto.SectionResponse;
-import com.csit321g2.bainabai.trackwise.entity.Section;
-import com.csit321g2.bainabai.trackwise.exception.ResourceNotFoundException;
-import com.csit321g2.bainabai.trackwise.repository.SectionRepository;
 import java.util.List;
+import java.util.NoSuchElementException;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+
+import com.csit321g2.bainabai.trackwise.entity.SectionEntity;
+import com.csit321g2.bainabai.trackwise.repository.SectionRepository;
 
 @Service
 public class SectionService {
 
-    private final SectionRepository repository;
+    @Autowired
+    SectionRepository repo;
 
-    public SectionService(SectionRepository repository) {
-        this.repository = repository;
+    public SectionService() {
     }
 
-    @Transactional
-    public SectionResponse create(SectionRequest request) {
-        Section section = new Section();
-        section.setName(request.name());
-        return toResponse(repository.saveAndFlush(section));
+    public SectionEntity postSection(SectionEntity section) {
+        if (section.getName() != null && repo.existsByNameIgnoreCase(section.getName())) {
+            throw new IllegalArgumentException("Section " + section.getName() + " already exists!");
+        }
+        return repo.save(section);
     }
 
-    @Transactional(readOnly = true)
-    public List<SectionResponse> findAll() {
-        return repository.findAll().stream().map(this::toResponse).toList();
+    public List<SectionEntity> getAllSections() {
+        return repo.findAll();
     }
 
-    @Transactional(readOnly = true)
-    public SectionResponse findById(Long id) {
-        return toResponse(getOrThrow(id));
+    public SectionEntity putSection(int id, SectionEntity newDetails) {
+        SectionEntity section = repo.findById(id).orElseThrow(() -> new NoSuchElementException("Section " + id + " does not exist!"));
+        if (newDetails.getName() != null && !newDetails.getName().equalsIgnoreCase(section.getName())
+                && repo.existsByNameIgnoreCase(newDetails.getName())) {
+            throw new IllegalArgumentException("Section " + newDetails.getName() + " already exists!");
+        }
+        section.setName(newDetails.getName());
+        return repo.save(section);
     }
 
-    @Transactional
-    public SectionResponse update(Long id, SectionRequest request) {
-        Section section = getOrThrow(id);
-        section.setName(request.name());
-        return toResponse(repository.saveAndFlush(section));
+    public String deleteSection(int id) {
+        if (!repo.existsById(id)) {
+            throw new NoSuchElementException("Section " + id + " does not exist!");
+        }
+        repo.deleteById(id);
+        return "Section " + id + " is successfully deleted!";
     }
 
-    @Transactional
-    public void delete(Long id) {
-        repository.delete(getOrThrow(id));
-        repository.flush();
-    }
-
-    private Section getOrThrow(Long id) {
-        return repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Section", id));
-    }
-
-    private SectionResponse toResponse(Section section) {
-        return new SectionResponse(section.getId(), section.getName());
-    }
 }

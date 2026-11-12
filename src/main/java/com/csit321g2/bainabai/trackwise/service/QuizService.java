@@ -1,77 +1,69 @@
 package com.csit321g2.bainabai.trackwise.service;
 
-import com.csit321g2.bainabai.trackwise.dto.QuizRequest;
-import com.csit321g2.bainabai.trackwise.dto.QuizResponse;
-import com.csit321g2.bainabai.trackwise.entity.Quiz;
+import java.util.List;
+import java.util.NoSuchElementException;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.csit321g2.bainabai.trackwise.entity.QuizEntity;
 import com.csit321g2.bainabai.trackwise.entity.Role;
-import com.csit321g2.bainabai.trackwise.entity.User;
-import com.csit321g2.bainabai.trackwise.exception.BadRequestException;
-import com.csit321g2.bainabai.trackwise.exception.ResourceNotFoundException;
+import com.csit321g2.bainabai.trackwise.entity.UserEntity;
 import com.csit321g2.bainabai.trackwise.repository.QuizRepository;
 import com.csit321g2.bainabai.trackwise.repository.UserRepository;
-import java.util.List;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class QuizService {
 
-    private final QuizRepository quizRepository;
-    private final UserRepository userRepository;
+    @Autowired
+    QuizRepository repo;
 
-    public QuizService(QuizRepository quizRepository, UserRepository userRepository) {
-        this.quizRepository = quizRepository;
-        this.userRepository = userRepository;
+    @Autowired
+    UserRepository userRepo;
+
+    public QuizService() {
     }
 
-    @Transactional
-    public QuizResponse create(QuizRequest request) {
-        Quiz quiz = new Quiz();
-        apply(quiz, request);
-        return toResponse(quizRepository.saveAndFlush(quiz));
-    }
-
-    @Transactional(readOnly = true)
-    public List<QuizResponse> findAll() {
-        return quizRepository.findAll().stream().map(this::toResponse).toList();
-    }
-
-    @Transactional(readOnly = true)
-    public QuizResponse findById(Long id) {
-        return toResponse(getOrThrow(id));
-    }
-
-    @Transactional
-    public QuizResponse update(Long id, QuizRequest request) {
-        Quiz quiz = getOrThrow(id);
-        apply(quiz, request);
-        return toResponse(quizRepository.saveAndFlush(quiz));
-    }
-
-    @Transactional
-    public void delete(Long id) {
-        quizRepository.delete(getOrThrow(id));
-        quizRepository.flush();
-    }
-
-    private void apply(Quiz quiz, QuizRequest request) {
-        User teacher = userRepository.findById(request.teacherId())
-                .orElseThrow(() -> new ResourceNotFoundException("User", request.teacherId()));
+    public QuizEntity postQuiz(QuizEntity quiz) {
+        if (quiz.getTeacher() == null) {
+            throw new IllegalArgumentException("Teacher is required!");
+        }
+        int teacherId = quiz.getTeacher().getUserId();
+        UserEntity teacher = userRepo.findById(teacherId).orElseThrow(() -> new NoSuchElementException("User " + teacherId + " does not exist!"));
         if (teacher.getRole() != Role.TEACHER) {
-            throw new BadRequestException("User " + teacher.getId() + " is not a TEACHER");
+            throw new IllegalArgumentException("User " + teacherId + " is not a teacher!");
         }
         quiz.setTeacher(teacher);
-        quiz.setTitle(request.title());
-        quiz.setDescription(request.description());
-        quiz.setTimeLimitMin(request.timeLimitMin());
+        return repo.save(quiz);
     }
 
-    private Quiz getOrThrow(Long id) {
-        return quizRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Quiz", id));
+    public List<QuizEntity> getAllQuizzes() {
+        return repo.findAll();
     }
 
-    private QuizResponse toResponse(Quiz quiz) {
-        return new QuizResponse(quiz.getId(), quiz.getTeacher().getId(), quiz.getTitle(),
-                quiz.getDescription(), quiz.getTimeLimitMin(), quiz.getCreatedAt());
+    public QuizEntity putQuiz(int id, QuizEntity newDetails) {
+        QuizEntity quiz = repo.findById(id).orElseThrow(() -> new NoSuchElementException("Quiz " + id + " does not exist!"));
+        if (newDetails.getTeacher() == null) {
+            throw new IllegalArgumentException("Teacher is required!");
+        }
+        int teacherId = newDetails.getTeacher().getUserId();
+        UserEntity teacher = userRepo.findById(teacherId).orElseThrow(() -> new NoSuchElementException("User " + teacherId + " does not exist!"));
+        if (teacher.getRole() != Role.TEACHER) {
+            throw new IllegalArgumentException("User " + teacherId + " is not a teacher!");
+        }
+        quiz.setTeacher(teacher);
+        quiz.setTitle(newDetails.getTitle());
+        quiz.setDescription(newDetails.getDescription());
+        quiz.setTimeLimitMin(newDetails.getTimeLimitMin());
+        return repo.save(quiz);
     }
+
+    public String deleteQuiz(int id) {
+        if (!repo.existsById(id)) {
+            throw new NoSuchElementException("Quiz " + id + " does not exist!");
+        }
+        repo.deleteById(id);
+        return "Quiz " + id + " is successfully deleted!";
+    }
+
 }

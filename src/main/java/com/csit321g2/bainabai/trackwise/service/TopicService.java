@@ -1,58 +1,50 @@
 package com.csit321g2.bainabai.trackwise.service;
 
-import com.csit321g2.bainabai.trackwise.dto.TopicRequest;
-import com.csit321g2.bainabai.trackwise.dto.TopicResponse;
-import com.csit321g2.bainabai.trackwise.entity.Topic;
-import com.csit321g2.bainabai.trackwise.exception.ResourceNotFoundException;
-import com.csit321g2.bainabai.trackwise.repository.TopicRepository;
 import java.util.List;
+import java.util.NoSuchElementException;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+
+import com.csit321g2.bainabai.trackwise.entity.TopicEntity;
+import com.csit321g2.bainabai.trackwise.repository.TopicRepository;
 
 @Service
 public class TopicService {
 
-    private final TopicRepository repository;
+    @Autowired
+    TopicRepository repo;
 
-    public TopicService(TopicRepository repository) {
-        this.repository = repository;
+    public TopicService() {
     }
 
-    @Transactional
-    public TopicResponse create(TopicRequest request) {
-        Topic topic = new Topic();
-        topic.setName(request.name());
-        return toResponse(repository.saveAndFlush(topic));
+    public TopicEntity postTopic(TopicEntity topic) {
+        if (topic.getName() != null && repo.existsByNameIgnoreCase(topic.getName())) {
+            throw new IllegalArgumentException("Topic " + topic.getName() + " already exists!");
+        }
+        return repo.save(topic);
     }
 
-    @Transactional(readOnly = true)
-    public List<TopicResponse> findAll() {
-        return repository.findAll().stream().map(this::toResponse).toList();
+    public List<TopicEntity> getAllTopics() {
+        return repo.findAll();
     }
 
-    @Transactional(readOnly = true)
-    public TopicResponse findById(Long id) {
-        return toResponse(getOrThrow(id));
+    public TopicEntity putTopic(int id, TopicEntity newDetails) {
+        TopicEntity topic = repo.findById(id).orElseThrow(() -> new NoSuchElementException("Topic " + id + " does not exist!"));
+        if (newDetails.getName() != null && !newDetails.getName().equalsIgnoreCase(topic.getName())
+                && repo.existsByNameIgnoreCase(newDetails.getName())) {
+            throw new IllegalArgumentException("Topic " + newDetails.getName() + " already exists!");
+        }
+        topic.setName(newDetails.getName());
+        return repo.save(topic);
     }
 
-    @Transactional
-    public TopicResponse update(Long id, TopicRequest request) {
-        Topic topic = getOrThrow(id);
-        topic.setName(request.name());
-        return toResponse(repository.saveAndFlush(topic));
+    public String deleteTopic(int id) {
+        if (!repo.existsById(id)) {
+            throw new NoSuchElementException("Topic " + id + " does not exist!");
+        }
+        repo.deleteById(id);
+        return "Topic " + id + " is successfully deleted!";
     }
 
-    @Transactional
-    public void delete(Long id) {
-        repository.delete(getOrThrow(id));
-        repository.flush();
-    }
-
-    private Topic getOrThrow(Long id) {
-        return repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Topic", id));
-    }
-
-    private TopicResponse toResponse(Topic topic) {
-        return new TopicResponse(topic.getId(), topic.getName());
-    }
 }

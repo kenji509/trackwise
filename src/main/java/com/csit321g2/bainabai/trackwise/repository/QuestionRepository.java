@@ -1,7 +1,9 @@
 package com.csit321g2.bainabai.trackwise.repository;
 
-import com.csit321g2.bainabai.trackwise.entity.Question;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import com.csit321g2.bainabai.trackwise.entity.QuestionEntity;
 
-public interface QuestionRepository extends JpaRepository<Question, Long> {
+@Repository
+public interface QuestionRepository extends JpaRepository<QuestionEntity, Integer> {
 }

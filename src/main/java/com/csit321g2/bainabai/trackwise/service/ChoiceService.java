@@ -1,71 +1,61 @@
 package com.csit321g2.bainabai.trackwise.service;
 
-import com.csit321g2.bainabai.trackwise.dto.ChoiceRequest;
-import com.csit321g2.bainabai.trackwise.dto.ChoiceResponse;
-import com.csit321g2.bainabai.trackwise.entity.Choice;
-import com.csit321g2.bainabai.trackwise.entity.Question;
-import com.csit321g2.bainabai.trackwise.exception.ResourceNotFoundException;
+import java.util.List;
+import java.util.NoSuchElementException;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.csit321g2.bainabai.trackwise.entity.ChoiceEntity;
+import com.csit321g2.bainabai.trackwise.entity.QuestionEntity;
 import com.csit321g2.bainabai.trackwise.repository.ChoiceRepository;
 import com.csit321g2.bainabai.trackwise.repository.QuestionRepository;
-import java.util.List;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ChoiceService {
 
-    private final ChoiceRepository choiceRepository;
-    private final QuestionRepository questionRepository;
+    @Autowired
+    ChoiceRepository repo;
 
-    public ChoiceService(ChoiceRepository choiceRepository, QuestionRepository questionRepository) {
-        this.choiceRepository = choiceRepository;
-        this.questionRepository = questionRepository;
+    @Autowired
+    QuestionRepository questionRepo;
+
+    public ChoiceService() {
     }
 
-    @Transactional
-    public ChoiceResponse create(ChoiceRequest request) {
-        Choice choice = new Choice();
-        apply(choice, request);
-        return toResponse(choiceRepository.saveAndFlush(choice));
-    }
-
-    @Transactional(readOnly = true)
-    public List<ChoiceResponse> findAll() {
-        return choiceRepository.findAll().stream().map(this::toResponse).toList();
-    }
-
-    @Transactional(readOnly = true)
-    public ChoiceResponse findById(Long id) {
-        return toResponse(getOrThrow(id));
-    }
-
-    @Transactional
-    public ChoiceResponse update(Long id, ChoiceRequest request) {
-        Choice choice = getOrThrow(id);
-        apply(choice, request);
-        return toResponse(choiceRepository.saveAndFlush(choice));
-    }
-
-    @Transactional
-    public void delete(Long id) {
-        choiceRepository.delete(getOrThrow(id));
-        choiceRepository.flush();
-    }
-
-    private void apply(Choice choice, ChoiceRequest request) {
-        Question question = questionRepository.findById(request.questionId())
-                .orElseThrow(() -> new ResourceNotFoundException("Question", request.questionId()));
+    public ChoiceEntity postChoice(ChoiceEntity choice) {
+        if (choice.getQuestion() == null) {
+            throw new IllegalArgumentException("Question is required!");
+        }
+        int questionId = choice.getQuestion().getQuestionId();
+        QuestionEntity question = questionRepo.findById(questionId).orElseThrow(() -> new NoSuchElementException("Question " + questionId + " does not exist!"));
         choice.setQuestion(question);
-        choice.setChoiceText(request.choiceText());
-        choice.setCorrect(request.isCorrect());
+        return repo.save(choice);
     }
 
-    private Choice getOrThrow(Long id) {
-        return choiceRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Choice", id));
+    public List<ChoiceEntity> getAllChoices() {
+        return repo.findAll();
     }
 
-    private ChoiceResponse toResponse(Choice choice) {
-        return new ChoiceResponse(choice.getId(), choice.getQuestion().getId(),
-                choice.getChoiceText(), choice.isCorrect());
+    public ChoiceEntity putChoice(int id, ChoiceEntity newDetails) {
+        ChoiceEntity choice = repo.findById(id).orElseThrow(() -> new NoSuchElementException("Choice " + id + " does not exist!"));
+        if (newDetails.getQuestion() == null) {
+            throw new IllegalArgumentException("Question is required!");
+        }
+        int questionId = newDetails.getQuestion().getQuestionId();
+        QuestionEntity question = questionRepo.findById(questionId).orElseThrow(() -> new NoSuchElementException("Question " + questionId + " does not exist!"));
+        choice.setQuestion(question);
+        choice.setChoiceText(newDetails.getChoiceText());
+        choice.setIsCorrect(newDetails.getIsCorrect());
+        return repo.save(choice);
     }
+
+    public String deleteChoice(int id) {
+        if (!repo.existsById(id)) {
+            throw new NoSuchElementException("Choice " + id + " does not exist!");
+        }
+        repo.deleteById(id);
+        return "Choice " + id + " is successfully deleted!";
+    }
+
 }

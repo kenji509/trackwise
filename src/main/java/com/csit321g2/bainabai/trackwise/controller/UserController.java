@@ -1,47 +1,79 @@
 package com.csit321g2.bainabai.trackwise.controller;
 
-import com.csit321g2.bainabai.trackwise.dto.UserRequest;
-import com.csit321g2.bainabai.trackwise.dto.UserResponse;
-import com.csit321g2.bainabai.trackwise.service.UserService;
-import jakarta.validation.Valid;
 import java.util.List;
+import java.util.NoSuchElementException;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.csit321g2.bainabai.trackwise.entity.UserEntity;
+import com.csit321g2.bainabai.trackwise.service.NameErrorResponse;
+import com.csit321g2.bainabai.trackwise.service.UserService;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/user/api")
+@CrossOrigin(origins = "http://localhost:3000")
 public class UserController {
 
-    private final UserService service;
+    @Autowired
+    UserService service;
 
-    public UserController(UserService service) {
-        this.service = service;
+    public UserController() {
     }
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public UserResponse create(@Valid @RequestBody UserRequest request) {
-        return service.create(request);
+    @GetMapping("/printAuthor")
+    public String printAuthor() {
+        return "Kenji Uehara and Jude Ralph A. Cayomo";
     }
 
-    @GetMapping
-    public List<UserResponse> findAll() {
-        return service.findAll();
+    @PostMapping("/postNewUser")
+    public UserEntity postUser(@RequestBody UserEntity user) {
+        return service.postUser(user);
     }
 
-    @GetMapping("/{id}")
-    public UserResponse findById(@PathVariable Long id) {
-        return service.findById(id);
+    @GetMapping("/getAllUsers")
+    public List<UserEntity> getAllUsers() {
+        return service.getAllUsers();
     }
 
-    @PutMapping("/{id}")
-    public UserResponse update(@PathVariable Long id, @Valid @RequestBody UserRequest request) {
-        return service.update(id, request);
+    @PutMapping("/putUser")
+    public UserEntity putUser(@RequestParam int id, @RequestBody UserEntity newDetails) {
+        return service.putUser(id, newDetails);
     }
 
-    @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
-        service.delete(id);
+    @DeleteMapping("/deleteUser/{id}")
+    public String deleteUser(@PathVariable int id) {
+        return service.deleteUser(id);
     }
+
+    @ExceptionHandler
+    public ResponseEntity<NameErrorResponse> handleException(NoSuchElementException ex) {
+        NameErrorResponse error = new NameErrorResponse();
+        error.setStatus(HttpStatus.NOT_FOUND.value());
+        error.setMessage(ex.getMessage());
+        error.setTimestamp(System.currentTimeMillis());
+        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<NameErrorResponse> handleException(Exception ex) {
+        NameErrorResponse error = new NameErrorResponse();
+        error.setStatus(HttpStatus.BAD_REQUEST.value());
+        error.setMessage(ex.getMessage());
+        error.setTimestamp(System.currentTimeMillis());
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
 }

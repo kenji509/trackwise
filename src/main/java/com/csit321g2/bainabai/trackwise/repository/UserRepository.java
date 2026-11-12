@@ -1,11 +1,11 @@
 package com.csit321g2.bainabai.trackwise.repository;
 
-import com.csit321g2.bainabai.trackwise.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import com.csit321g2.bainabai.trackwise.entity.UserEntity;
 
-public interface UserRepository extends JpaRepository<User, Long> {
+@Repository
+public interface UserRepository extends JpaRepository<UserEntity, Integer> {
 
-    boolean existsByEmail(String email);
-
-    boolean existsByEmailAndIdNot(String email, Long id);
+    boolean existsByEmailIgnoreCase(String email);
 }

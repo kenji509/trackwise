@@ -1,47 +1,79 @@
 package com.csit321g2.bainabai.trackwise.controller;
 
-import com.csit321g2.bainabai.trackwise.dto.QuizRequest;
-import com.csit321g2.bainabai.trackwise.dto.QuizResponse;
-import com.csit321g2.bainabai.trackwise.service.QuizService;
-import jakarta.validation.Valid;
 import java.util.List;
+import java.util.NoSuchElementException;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.csit321g2.bainabai.trackwise.entity.QuizEntity;
+import com.csit321g2.bainabai.trackwise.service.NameErrorResponse;
+import com.csit321g2.bainabai.trackwise.service.QuizService;
 
 @RestController
-@RequestMapping("/api/quizzes")
+@RequestMapping("/quiz/api")
+@CrossOrigin(origins = "http://localhost:3000")
 public class QuizController {
 
-    private final QuizService service;
+    @Autowired
+    QuizService service;
 
-    public QuizController(QuizService service) {
-        this.service = service;
+    public QuizController() {
     }
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public QuizResponse create(@Valid @RequestBody QuizRequest request) {
-        return service.create(request);
+    @GetMapping("/printAuthor")
+    public String printAuthor() {
+        return "Kenji Uehara and Jude Ralph A. Cayomo";
     }
 
-    @GetMapping
-    public List<QuizResponse> findAll() {
-        return service.findAll();
+    @PostMapping("/postNewQuiz")
+    public QuizEntity postQuiz(@RequestBody QuizEntity quiz) {
+        return service.postQuiz(quiz);
     }
 
-    @GetMapping("/{id}")
-    public QuizResponse findById(@PathVariable Long id) {
-        return service.findById(id);
+    @GetMapping("/getAllQuizzes")
+    public List<QuizEntity> getAllQuizzes() {
+        return service.getAllQuizzes();
     }
 
-    @PutMapping("/{id}")
-    public QuizResponse update(@PathVariable Long id, @Valid @RequestBody QuizRequest request) {
-        return service.update(id, request);
+    @PutMapping("/putQuiz")
+    public QuizEntity putQuiz(@RequestParam int id, @RequestBody QuizEntity newDetails) {
+        return service.putQuiz(id, newDetails);
     }
 
-    @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
-        service.delete(id);
+    @DeleteMapping("/deleteQuiz/{id}")
+    public String deleteQuiz(@PathVariable int id) {
+        return service.deleteQuiz(id);
     }
+
+    @ExceptionHandler
+    public ResponseEntity<NameErrorResponse> handleException(NoSuchElementException ex) {
+        NameErrorResponse error = new NameErrorResponse();
+        error.setStatus(HttpStatus.NOT_FOUND.value());
+        error.setMessage(ex.getMessage());
+        error.setTimestamp(System.currentTimeMillis());
+        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<NameErrorResponse> handleException(Exception ex) {
+        NameErrorResponse error = new NameErrorResponse();
+        error.setStatus(HttpStatus.BAD_REQUEST.value());
+        error.setMessage(ex.getMessage());
+        error.setTimestamp(System.currentTimeMillis());
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
 }

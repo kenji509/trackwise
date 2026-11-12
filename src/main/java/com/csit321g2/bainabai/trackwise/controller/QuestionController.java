@@ -1,47 +1,79 @@
 package com.csit321g2.bainabai.trackwise.controller;
 
-import com.csit321g2.bainabai.trackwise.dto.QuestionRequest;
-import com.csit321g2.bainabai.trackwise.dto.QuestionResponse;
-import com.csit321g2.bainabai.trackwise.service.QuestionService;
-import jakarta.validation.Valid;
 import java.util.List;
+import java.util.NoSuchElementException;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.csit321g2.bainabai.trackwise.entity.QuestionEntity;
+import com.csit321g2.bainabai.trackwise.service.NameErrorResponse;
+import com.csit321g2.bainabai.trackwise.service.QuestionService;
 
 @RestController
-@RequestMapping("/api/questions")
+@RequestMapping("/question/api")
+@CrossOrigin(origins = "http://localhost:3000")
 public class QuestionController {
 
-    private final QuestionService service;
+    @Autowired
+    QuestionService service;
 
-    public QuestionController(QuestionService service) {
-        this.service = service;
+    public QuestionController() {
     }
 
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public QuestionResponse create(@Valid @RequestBody QuestionRequest request) {
-        return service.create(request);
+    @GetMapping("/printAuthor")
+    public String printAuthor() {
+        return "Kenji Uehara and Jude Ralph A. Cayomo";
     }
 
-    @GetMapping
-    public List<QuestionResponse> findAll() {
-        return service.findAll();
+    @PostMapping("/postNewQuestion")
+    public QuestionEntity postQuestion(@RequestBody QuestionEntity question) {
+        return service.postQuestion(question);
     }
 
-    @GetMapping("/{id}")
-    public QuestionResponse findById(@PathVariable Long id) {
-        return service.findById(id);
+    @GetMapping("/getAllQuestions")
+    public List<QuestionEntity> getAllQuestions() {
+        return service.getAllQuestions();
     }
 
-    @PutMapping("/{id}")
-    public QuestionResponse update(@PathVariable Long id, @Valid @RequestBody QuestionRequest request) {
-        return service.update(id, request);
+    @PutMapping("/putQuestion")
+    public QuestionEntity putQuestion(@RequestParam int id, @RequestBody QuestionEntity newDetails) {
+        return service.putQuestion(id, newDetails);
     }
 
-    @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
-        service.delete(id);
+    @DeleteMapping("/deleteQuestion/{id}")
+    public String deleteQuestion(@PathVariable int id) {
+        return service.deleteQuestion(id);
     }
+
+    @ExceptionHandler
+    public ResponseEntity<NameErrorResponse> handleException(NoSuchElementException ex) {
+        NameErrorResponse error = new NameErrorResponse();
+        error.setStatus(HttpStatus.NOT_FOUND.value());
+        error.setMessage(ex.getMessage());
+        error.setTimestamp(System.currentTimeMillis());
+        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<NameErrorResponse> handleException(Exception ex) {
+        NameErrorResponse error = new NameErrorResponse();
+        error.setStatus(HttpStatus.BAD_REQUEST.value());
+        error.setMessage(ex.getMessage());
+        error.setTimestamp(System.currentTimeMillis());
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
 }
